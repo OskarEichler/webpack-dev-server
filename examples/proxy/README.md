@@ -8,11 +8,12 @@ Proxying some URLs can be useful when you have a separate API backend developmen
 module.exports = {
   // ...
   devServer: {
-    proxy: {
-      "/proxy": {
+    proxy: [
+      {
+        context: "/proxy",
         target: "http://localhost:5000",
       },
-    },
+    ],
   },
 };
 ```
@@ -25,6 +26,6 @@ npx webpack serve --open
 
 ## What Should Happen
 
-1. The script start a proxy server on `http://localhost:5000/` and open `http://localhost:8080/` in your default browser.
+1. The script starts a backend on an available loopback port and opens `http://localhost:8080/` in your default browser. The example's `router` function directs proxy requests to that backend, avoiding conflicts with services already using port 5000.
 2. You should see the text on the page itself change to read `Success! Now visit /proxy`.
 3. Now visit the `/proxy` route by clicking on the `/proxy` text, you should see the text on the page itself change to read `response from proxy`.

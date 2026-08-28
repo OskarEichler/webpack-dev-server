@@ -6,32 +6,38 @@ import { setup } from "../util.js";
 /**
  *
  */
-async function listenProxyServer() {
+function listenProxyServer() {
   const proxyApp = express();
 
   proxyApp.get("/proxy", (req, res) => {
     res.send("response from proxy");
   });
 
-  await new Promise((resolve) => {
-    proxyApp.listen(5000, () => {
-      resolve();
-    });
-  });
+  return proxyApp.listen(0, "127.0.0.1");
 }
+
+let proxyServer;
 
 export default setup(
   {
     context: import.meta.dirname,
     entry: "./app.js",
     devServer: {
-      onBeforeSetupMiddleware: async () => {
-        await listenProxyServer();
+      onListening: (devServer) => {
+        proxyServer = listenProxyServer();
+        devServer.server.once("close", () => {
+          proxyServer.close();
+          proxyServer.closeAllConnections();
+        });
       },
       proxy: [
         {
           context: "/proxy",
-          target: "http://localhost:5000",
+          target: "http://127.0.0.1",
+          router: () => {
+            const address = proxyServer.address();
+            return `http://127.0.0.1:${address.port}`;
+          },
         },
       ],
     },

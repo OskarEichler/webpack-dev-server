@@ -5,19 +5,23 @@ Serve using [`hono`](https://github.com/honojs/hono) as an application.
 **webpack.config.js**
 
 ```js
-const connect = require("connect");
+import { createAdaptorServer } from "@hono/node-server";
+import { Hono } from "hono";
+import wdm from "webpack-dev-middleware";
 
-module.exports = {
+export default {
   // ...
   devServer: {
-    server: {
-      app: () => connect(),
-    },
+    app: () => new Hono(),
+    server: (_, app) => createAdaptorServer({ fetch: app.fetch }),
+    setupMiddlewares: (_, devServer) => [
+      { middleware: wdm.honoWrapper(devServer.compiler) },
+    ],
   },
 };
 ```
 
 ## What Should Happen
 
-1. The script should open `https://localhost:8080/` in your default browser.
+1. The script should open `http://localhost:8080/` in your default browser.
 2. You should see the text on the page itself change to read `Success!`.
