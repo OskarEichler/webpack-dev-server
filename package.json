@@ -77,6 +77,7 @@
     "launch-editor": "^2.14.1",
     "open": "^11.0.0",
     "p-retry": "^8.0.0",
+    "picomatch": "^4.0.4",
     "schema-utils": "^4.3.3",
     "selfsigned": "^5.5.0",
     "serve-index": "^1.9.2",
