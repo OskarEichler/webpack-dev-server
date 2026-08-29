@@ -16,7 +16,7 @@ export default {
     server: (_, app) => createAdaptorServer({ fetch: app.fetch }),
     setupMiddlewares: (_, devServer) => {
       const hostCheck = async (context, next) => {
-        const headers = Object.fromEntries(context.req.raw.headers);
+        const headers = context.env.incoming.headers;
         const headerName = headers[":authority"] ? ":authority" : "host";
 
         if (!devServer.isValidHost(headers, headerName)) {
@@ -26,7 +26,7 @@ export default {
         await next();
       };
       const crossOriginCheck = async (context, next) => {
-        const headers = Object.fromEntries(context.req.raw.headers);
+        const headers = context.env.incoming.headers;
         const headerName = headers[":authority"] ? ":authority" : "host";
 
         if (
