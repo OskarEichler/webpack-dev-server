@@ -5,6 +5,7 @@ Proxying some URLs can be useful when you have a separate API backend developmen
 **webpack.config.js**
 
 ```js
+import { once } from "node:events";
 import express from "express";
 
 function listenProxyServer() {
@@ -18,12 +19,14 @@ function listenProxyServer() {
 }
 
 let proxyServer;
+let proxyServerReady;
 
 export default {
   // ...
   devServer: {
     onListening: (devServer) => {
       proxyServer = listenProxyServer();
+      proxyServerReady = once(proxyServer, "listening");
       devServer.server.once("close", () => {
         proxyServer.close();
         proxyServer.closeAllConnections();
@@ -33,7 +36,8 @@ export default {
       {
         context: "/proxy",
         target: "http://127.0.0.1",
-        router: () => {
+        router: async () => {
+          await proxyServerReady;
           const { port } = proxyServer.address();
           return `http://127.0.0.1:${port}`;
         },
