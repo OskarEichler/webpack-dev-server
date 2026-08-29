@@ -14,12 +14,51 @@ export default {
   devServer: {
     app: () => new Hono(),
     server: (_, app) => createAdaptorServer({ fetch: app.fetch }),
-    setupMiddlewares: (_, devServer) => [
-      { middleware: wdm.honoWrapper(devServer.compiler) },
-    ],
+    setupMiddlewares: (_, devServer) => {
+      const hostCheck = async (context, next) => {
+        const headers = Object.fromEntries(context.req.raw.headers);
+        const headerName = headers[":authority"] ? ":authority" : "host";
+
+        if (!devServer.isValidHost(headers, headerName)) {
+          return context.text("Invalid Host header", 403);
+        }
+
+        await next();
+      };
+      const crossOriginCheck = async (context, next) => {
+        const headers = Object.fromEntries(context.req.raw.headers);
+        const headerName = headers[":authority"] ? ":authority" : "host";
+
+        if (
+          !devServer.isValidHost(headers, headerName, false) &&
+          headers["sec-fetch-mode"] === "no-cors" &&
+          headers["sec-fetch-site"] === "cross-site"
+        ) {
+          return context.text("Cross-Origin request blocked", 403);
+        }
+
+        if (
+          devServer.options.allowedHosts !== "all" &&
+          !devServer.isUserCORSWildcardEnabled()
+        ) {
+          context.header("Cross-Origin-Resource-Policy", "same-origin");
+        }
+
+        await next();
+      };
+
+      return [
+        { middleware: hostCheck },
+        { middleware: crossOriginCheck },
+        { middleware: wdm.honoWrapper(devServer.compiler) },
+      ];
+    },
   },
 };
 ```
+
+Custom applications replace the default middleware stack, so they must provide
+equivalent host and cross-origin protections.
 
 ## What Should Happen
 
