@@ -1,3 +1,4 @@
+import { once } from "node:events";
 import express from "express";
 // our setup function adds behind-the-scenes bits to the config that all of our
 // examples need
@@ -17,6 +18,7 @@ function listenProxyServer() {
 }
 
 let proxyServer;
+let proxyServerReady;
 
 export default setup(
   {
@@ -25,6 +27,7 @@ export default setup(
     devServer: {
       onListening: (devServer) => {
         proxyServer = listenProxyServer();
+        proxyServerReady = once(proxyServer, "listening");
         devServer.server.once("close", () => {
           proxyServer.close();
           proxyServer.closeAllConnections();
@@ -34,7 +37,8 @@ export default setup(
         {
           context: "/proxy",
           target: "http://127.0.0.1",
-          router: () => {
+          router: async () => {
+            await proxyServerReady;
             const address = proxyServer.address();
             return `http://127.0.0.1:${address.port}`;
           },
