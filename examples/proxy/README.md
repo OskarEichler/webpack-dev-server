@@ -5,13 +5,38 @@ Proxying some URLs can be useful when you have a separate API backend developmen
 **webpack.config.js**
 
 ```js
-module.exports = {
+import express from "express";
+
+function listenProxyServer() {
+  const proxyApp = express();
+
+  proxyApp.get("/proxy", (req, res) => {
+    res.send("response from proxy");
+  });
+
+  return proxyApp.listen(0, "127.0.0.1");
+}
+
+let proxyServer;
+
+export default {
   // ...
   devServer: {
+    onListening: (devServer) => {
+      proxyServer = listenProxyServer();
+      devServer.server.once("close", () => {
+        proxyServer.close();
+        proxyServer.closeAllConnections();
+      });
+    },
     proxy: [
       {
         context: "/proxy",
-        target: "http://localhost:5000",
+        target: "http://127.0.0.1",
+        router: () => {
+          const { port } = proxyServer.address();
+          return `http://127.0.0.1:${port}`;
+        },
       },
     ],
   },
