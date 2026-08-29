@@ -20,7 +20,7 @@ export default setup(
         {
           name: "host-header-check",
           middleware: async (context, next) => {
-            const headers = Object.fromEntries(context.req.raw.headers);
+            const headers = context.env.incoming.headers;
             const headerName = headers[":authority"] ? ":authority" : "host";
 
             if (!devServer.isValidHost(headers, headerName)) {
@@ -33,7 +33,7 @@ export default setup(
         {
           name: "cross-origin-header-check",
           middleware: async (context, next) => {
-            const headers = Object.fromEntries(context.req.raw.headers);
+            const headers = context.env.incoming.headers;
             const headerName = headers[":authority"] ? ":authority" : "host";
 
             if (
