@@ -26,8 +26,11 @@ export default setup(
             response.end("Proxy request failed");
           });
         });
+        const upgradedSockets = new Set();
 
         proxyServer.on("upgrade", (request, socket, head) => {
+          upgradedSockets.add(socket);
+          socket.once("close", () => upgradedSockets.delete(socket));
           proxy
             .ws(request, socket, undefined, head)
             .catch(() => socket.destroy());
@@ -37,6 +40,9 @@ export default setup(
         server.server.once("close", () => {
           proxyServer.close();
           proxyServer.closeAllConnections();
+          for (const socket of upgradedSockets) {
+            socket.destroy();
+          }
         });
       },
     },
