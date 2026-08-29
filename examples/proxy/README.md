@@ -24,13 +24,14 @@ let proxyServerReady;
 export default {
   // ...
   devServer: {
-    onListening: (devServer) => {
+    setupMiddlewares: (middlewares, devServer) => {
       proxyServer = listenProxyServer();
       proxyServerReady = once(proxyServer, "listening");
       devServer.server.once("close", () => {
         proxyServer.close();
         proxyServer.closeAllConnections();
       });
+      return middlewares;
     },
     proxy: [
       {
