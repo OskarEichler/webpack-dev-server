@@ -209,6 +209,27 @@ describe("API", () => {
       stopSpy.mockRestore();
     });
 
+    it("should clean up initialized resources when setup fails", async () => {
+      const compiler = webpack(config);
+      const server = new Server({ port }, compiler);
+      const setupError = new Error("setup failed");
+      const close = fn((callback) => callback());
+      const setupSpy = spyOn(server, "setup").mockImplementation(async () => {
+        server.server = { close };
+        throw setupError;
+      });
+      const stopSpy = spyOn(server, "stop");
+
+      await expect(server.start()).rejects.toBe(setupError);
+
+      expect(stopSpy).toHaveBeenCalledTimes(1);
+      expect(close).toHaveBeenCalledTimes(1);
+      expect(server.server).toBeUndefined();
+
+      setupSpy.mockRestore();
+      stopSpy.mockRestore();
+    });
+
     it("should work when using configured manually", async (t) => {
       const compiler = webpack({
         ...config,
