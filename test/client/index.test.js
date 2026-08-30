@@ -191,6 +191,27 @@ describe("index", () => {
     });
   });
 
+  it("should send only overlay messages accepted by a filter", () => {
+    onSocketMessage.overlay({
+      warnings: (warning) => warning === "visible warning",
+      errors: (error) => error === "visible error",
+    });
+
+    onSocketMessage.warnings(["hidden warning", "visible warning"]);
+    expect(overlay.send).toHaveBeenLastCalledWith({
+      type: "BUILD_ERROR",
+      level: "warning",
+      messages: ["visible warning"],
+    });
+
+    onSocketMessage.errors(["hidden error", "visible error"]);
+    expect(overlay.send).toHaveBeenLastCalledWith({
+      type: "BUILD_ERROR",
+      level: "error",
+      messages: ["visible error"],
+    });
+  });
+
   it("should parse overlay options from resource query", async () => {
     // Re-evaluate client-src/index.js fresh after mutating __resourceQuery so
     // top-level option parsing runs again.

@@ -937,18 +937,11 @@ describe("API", () => {
             throw new Error("Validation didn't fail");
           }
 
-          await new Promise((resolve) => {
-            const interval = setInterval(() => {
-              const needFinish = consoleMessages.filter((message) =>
-                /Trying to reconnect/.test(message.text()),
-              );
-
-              if (needFinish.length > 0) {
-                clearInterval(interval);
-                resolve();
-              }
-            }, 100);
-          });
+          expect(
+            consoleMessages.some((message) =>
+              /Trying to reconnect/.test(message.text()),
+            ),
+          ).toBe(false);
 
           t.assert.snapshot(webSocketRequests[0].url);
 
