@@ -212,6 +212,18 @@ describe("index", () => {
     });
   });
 
+  it("should ignore malformed resource query parameters", async () => {
+    socket.mockReset();
+    log.setLogLevel.mockReset();
+    globalThis.__resourceQuery = "?%ZZ=x&logging=warn&overlay=%ZZ";
+
+    const indexUrl = import.meta.resolve("../../client-src/index.js");
+    await import(`${indexUrl}?t=${Date.now()}-${Math.random()}`);
+
+    expect(socket).toHaveBeenCalledTimes(1);
+    expect(log.setLogLevel).toHaveBeenCalledWith("warn");
+  });
+
   it("should parse overlay options from resource query", async () => {
     // Re-evaluate client-src/index.js fresh after mutating __resourceQuery so
     // top-level option parsing runs again.

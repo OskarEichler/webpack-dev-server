@@ -134,8 +134,12 @@ const parseURL = (resourceQuery) => {
       const key = separator === -1 ? parameter : parameter.slice(0, separator);
       const value = separator === -1 ? "" : parameter.slice(separator + 1);
 
-      /** @type {EXPECTED_ANY} */
-      (result)[decodeURIComponent(key)] = decodeURIComponent(value);
+      try {
+        /** @type {EXPECTED_ANY} */
+        (result)[decodeURIComponent(key)] = decodeURIComponent(value);
+      } catch {
+        // Ignore malformed percent escapes without preventing client startup.
+      }
     }
   } else {
     // Else, get the url from the <script> this file was called with.

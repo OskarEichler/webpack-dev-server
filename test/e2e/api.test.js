@@ -927,11 +927,15 @@ describe("API", () => {
         session.on("Network.webSocketCreated", (test) => {
           webSocketRequests.push(test);
         });
+        const webSocketClosed = new Promise((resolve) => {
+          session.once("Network.webSocketClosed", resolve);
+        });
 
         try {
           const response = await page.goto(`http://localhost:${port}/`, {
             waitUntil: "networkidle0",
           });
+          await webSocketClosed;
 
           if (!server.isValidHost(headers, "origin")) {
             throw new Error("Validation didn't fail");
